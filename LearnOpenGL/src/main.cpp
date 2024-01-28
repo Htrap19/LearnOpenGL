@@ -6,28 +6,30 @@
 static uint32_t s_Width = 800;
 static uint32_t s_Height = 600;
 
-static GLuint s_VAO, s_VBO, s_Shader;
+static GLuint s_VAO, s_VBO, s_Shader, s_UniformXMove;
 
 // Vertex Shader
-static const char* vShader = "											\n\
-#version 330															\n\
-																		\n\
-layout(location = 0) in vec3 a_Pos;										\n\
-																		\n\
-void main()																\n\
-{																		\n\
-	gl_Position = vec4(0.4 * a_Pos.x, 0.4 * a_Pos.y, a_Pos.z, 1.0);		\n\
+static const char* vShader = "														\n\
+#version 330																		\n\
+																					\n\
+layout(location = 0) in vec3 a_Pos;													\n\
+																					\n\
+uniform float u_XMove;																\n\
+																					\n\
+void main()																			\n\
+{																					\n\
+	gl_Position = vec4(0.4 * a_Pos.x + u_XMove, 0.4 * a_Pos.y, a_Pos.z, 1.0);		\n\
 }";
 
 // Fragment Shader
-static const char* fShader = "											\n\
-#version 330															\n\
-																		\n\
-out vec4 o_Color;														\n\
-																		\n\
-void main()																\n\
-{																		\n\
-	o_Color = vec4(0.2, 0.1, 0.3, 1.0);									\n\
+static const char* fShader = "														\n\
+#version 330																		\n\
+																					\n\
+out vec4 o_Color;																	\n\
+																					\n\
+void main()																			\n\
+{																					\n\
+	o_Color = vec4(0.2, 0.1, 0.3, 1.0);												\n\
 }";
 
 static void CreateTriangle()
@@ -112,6 +114,8 @@ static void CompileShader()
 		std::cerr << "Error validating program: " << eLog << std::endl;
 		return;
 	}
+
+	s_UniformXMove = glGetUniformLocation(s_Shader, "u_XMove");
 }
 
 int main(int argc, char* argv[])
@@ -154,14 +158,26 @@ int main(int argc, char* argv[])
 	CreateTriangle();
 	CompileShader();
 
+	bool direction = true; // True = Right, False = Left
+	float xOffset = 0.0f;
+	float xMaxOffset = 0.7f;
+	float xOffsetIncrement = 0.005f;
+
 	while (!glfwWindowShouldClose(mainWindow))
 	{
 		glfwPollEvents();
+
+		xOffset += direction ? xOffsetIncrement : -xOffsetIncrement;
+		
+		if (std::abs(xOffset) >= xMaxOffset)
+			direction = !direction;
 
 		glClearColor(0.3f, 0.2f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(s_Shader);
+
+		glUniform1f(s_UniformXMove, xOffset);
 
 		glBindVertexArray(s_VAO);
 
