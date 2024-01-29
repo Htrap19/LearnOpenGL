@@ -3,10 +3,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 static uint32_t s_Width = 800;
 static uint32_t s_Height = 600;
 
-static GLuint s_VAO, s_VBO, s_Shader, s_UniformXMove;
+static GLuint s_VAO, s_VBO, s_Shader, s_UniformModel;
 
 // Vertex Shader
 static const char* vShader = "														\n\
@@ -14,11 +18,11 @@ static const char* vShader = "														\n\
 																					\n\
 layout(location = 0) in vec3 a_Pos;													\n\
 																					\n\
-uniform float u_XMove;																\n\
+uniform mat4 u_Model;																\n\
 																					\n\
 void main()																			\n\
 {																					\n\
-	gl_Position = vec4(0.4 * a_Pos.x + u_XMove, 0.4 * a_Pos.y, a_Pos.z, 1.0);		\n\
+	gl_Position = u_Model * vec4(0.4 * a_Pos.x, 0.4 * a_Pos.y, a_Pos.z, 1.0);		\n\
 }";
 
 // Fragment Shader
@@ -115,7 +119,7 @@ static void CompileShader()
 		return;
 	}
 
-	s_UniformXMove = glGetUniformLocation(s_Shader, "u_XMove");
+	s_UniformModel = glGetUniformLocation(s_Shader, "u_Model");
 }
 
 int main(int argc, char* argv[])
@@ -172,12 +176,14 @@ int main(int argc, char* argv[])
 		if (std::abs(xOffset) >= xMaxOffset)
 			direction = !direction;
 
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(xOffset, 0.0f, 0.0f));
+
 		glClearColor(0.3f, 0.2f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(s_Shader);
 
-		glUniform1f(s_UniformXMove, xOffset);
+		glUniformMatrix4fv(s_UniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
 		glBindVertexArray(s_VAO);
 
