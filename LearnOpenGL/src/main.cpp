@@ -22,7 +22,7 @@ uniform mat4 u_Model;																\n\
 																					\n\
 void main()																			\n\
 {																					\n\
-	gl_Position = u_Model * vec4(0.4 * a_Pos.x, 0.4 * a_Pos.y, a_Pos.z, 1.0);		\n\
+	gl_Position = u_Model * vec4(a_Pos, 1.0);										\n\
 }";
 
 // Fragment Shader
@@ -166,7 +166,11 @@ int main(int argc, char* argv[])
 	float xOffset = 0.0f;
 	float xMaxOffset = 0.7f;
 	float xOffsetIncrement = 0.005f;
+	
 	float curAngle = 0.0f;
+
+	bool sizeDirection = true; // True = Stretch, False = Compress
+	float curSize = 0.4f, maxSize = 0.8f, minSize = 0.1f;
 
 	while (!glfwWindowShouldClose(mainWindow))
 	{
@@ -179,8 +183,14 @@ int main(int argc, char* argv[])
 
 		curAngle = curAngle >= 360.0f ? 0 : curAngle + 0.05f;
 
+		curSize += sizeDirection ? 0.001f : -0.001f;
+
+		if (curSize > maxSize || curSize < minSize)
+			sizeDirection = !sizeDirection;
+
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(xOffset, 0.0f, 0.0f));
 		model = glm::rotate(model, glm::radians(curAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::scale(model, glm::vec3(curSize, curSize, 1.0f));
 
 		glClearColor(0.3f, 0.2f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
