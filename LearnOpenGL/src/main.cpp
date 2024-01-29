@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
 	float xOffset = 0.0f;
 	float xMaxOffset = 0.7f;
 	float xOffsetIncrement = 0.005f;
+	float curAngle = 0.0f;
 
 	while (!glfwWindowShouldClose(mainWindow))
 	{
@@ -176,7 +177,10 @@ int main(int argc, char* argv[])
 		if (std::abs(xOffset) >= xMaxOffset)
 			direction = !direction;
 
+		curAngle = curAngle >= 360.0f ? 0 : curAngle + 0.05f;
+
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(xOffset, 0.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(curAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		glClearColor(0.3f, 0.2f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
