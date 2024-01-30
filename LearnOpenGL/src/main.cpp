@@ -10,7 +10,7 @@
 static uint32_t s_Width = 800;
 static uint32_t s_Height = 600;
 
-static GLuint s_VAO, s_VBO, s_IBO, s_Shader, s_UniformModel;
+static GLuint s_VAO, s_VBO, s_IBO, s_Shader, s_UniformModel, s_UniformProjection;
 
 // Vertex Shader
 static const char* vShader = "														\n\
@@ -21,10 +21,11 @@ layout(location = 0) in vec3 a_Pos;													\n\
 out vec4 v_VCol;																	\n\
 																					\n\
 uniform mat4 u_Model;																\n\
+uniform mat4 u_Projection;															\n\
 																					\n\
 void main()																			\n\
 {																					\n\
-	gl_Position = u_Model * vec4(a_Pos, 1.0);										\n\
+	gl_Position = u_Projection * u_Model * vec4(a_Pos, 1.0);						\n\
 	v_VCol = vec4(clamp(a_Pos, 0.0, 1.0), 1.0);										\n\
 }";
 
@@ -138,6 +139,7 @@ static void CompileShader()
 	}
 
 	s_UniformModel = glGetUniformLocation(s_Shader, "u_Model");
+	s_UniformProjection = glGetUniformLocation(s_Shader, "u_Projection");
 }
 
 int main(int argc, char* argv[])
@@ -192,6 +194,8 @@ int main(int argc, char* argv[])
 	bool sizeDirection = true; // True = Stretch, False = Compress
 	float curSize = 0.4f, maxSize = 0.8f, minSize = 0.1f;
 
+	glm::mat4 projection = glm::perspective(45.0f, ((GLfloat)bufferWidth / (GLfloat)bufferHeight), 0.1f, 100.0f);
+
 	while (!glfwWindowShouldClose(mainWindow))
 	{
 		glfwPollEvents();
@@ -208,8 +212,8 @@ int main(int argc, char* argv[])
 		if (curSize > maxSize || curSize < minSize)
 			sizeDirection = !sizeDirection;
 
-		//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(xOffset, 0.0f, 0.0f));
-		glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(curAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
+		model = glm::rotate(model, glm::radians(curAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 
 		glClearColor(0.3f, 0.2f, 0.5f, 1.0f);
@@ -218,6 +222,7 @@ int main(int argc, char* argv[])
 		glUseProgram(s_Shader);
 
 		glUniformMatrix4fv(s_UniformModel, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(s_UniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindVertexArray(s_VAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s_IBO);
