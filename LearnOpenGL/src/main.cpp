@@ -18,22 +18,27 @@ static const char* vShader = "														\n\
 																					\n\
 layout(location = 0) in vec3 a_Pos;													\n\
 																					\n\
+out vec4 v_VCol;																	\n\
+																					\n\
 uniform mat4 u_Model;																\n\
 																					\n\
 void main()																			\n\
 {																					\n\
 	gl_Position = u_Model * vec4(a_Pos, 1.0);										\n\
+	v_VCol = vec4(clamp(a_Pos, 0.0, 1.0), 1.0);										\n\
 }";
 
 // Fragment Shader
 static const char* fShader = "														\n\
 #version 330																		\n\
 																					\n\
+in vec4 v_VCol;																		\n\
+																					\n\
 out vec4 o_Color;																	\n\
 																					\n\
 void main()																			\n\
 {																					\n\
-	o_Color = vec4(0.2, 0.1, 0.3, 1.0);												\n\
+	o_Color = v_VCol;																\n\
 }";
 
 static void CreateTriangle()
@@ -188,9 +193,9 @@ int main(int argc, char* argv[])
 		if (curSize > maxSize || curSize < minSize)
 			sizeDirection = !sizeDirection;
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(xOffset, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(curAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-		model = glm::scale(model, glm::vec3(curSize, curSize, 1.0f));
+		//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(xOffset, 0.0f, 0.0f));
+		//model = glm::rotate(model, glm::radians(curAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 0.4f, 1.0f));
 
 		glClearColor(0.3f, 0.2f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
