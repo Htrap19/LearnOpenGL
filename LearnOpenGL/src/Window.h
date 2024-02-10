@@ -22,10 +22,22 @@ public:
 	inline GLfloat GetBufferWidth() const { return (GLfloat)m_BufferWidth; }
 	inline GLfloat GetBufferHeight() const { return (GLfloat)m_BufferHeight; }
 
+	GLfloat GetDeltaX();
+	GLfloat GetDeltaY();
+
+private:
+	static void HandleKeyCallback(GLFWwindow* window, int key, int code, int action, int mode);
+	static void HandleCursorCallback(GLFWwindow* window, double xPos, double yPos);
+
 private:
 	uint32_t m_Width = 1280, m_Height = 720;
 	int m_BufferWidth = 0, m_BufferHeight = 0;
 	std::string m_Title;
+
+	bool m_Keys[GLFW_KEY_LAST + 1];
+	GLfloat m_LastX, m_LastY, m_DeltaX, m_DeltaY;
+	bool m_FirstMouseCallback = true;
+	
 	GLFWwindow* m_Window = nullptr;
 };
 
