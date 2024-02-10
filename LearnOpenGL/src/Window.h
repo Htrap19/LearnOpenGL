@@ -22,6 +22,8 @@ public:
 	inline GLfloat GetBufferWidth() const { return (GLfloat)m_BufferWidth; }
 	inline GLfloat GetBufferHeight() const { return (GLfloat)m_BufferHeight; }
 
+	bool IsKeyPressed(uint32_t key) const;
+
 	GLfloat GetDeltaX();
 	GLfloat GetDeltaY();
 

@@ -10,6 +10,7 @@
 #include "Window.h"
 #include "Mesh.h"
 #include "Shader.h"
+#include "Camera.h"
 
 std::vector<Mesh> s_MeshList;
 std::vector<Shader> s_ShaderList;
@@ -56,11 +57,23 @@ int main(int argc, char* argv[])
 	CreateObjects();
 	CreateShader();
 
+	Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
+
 	glm::mat4 projection = glm::perspective(45.0f, (window.GetBufferWidth() / window.GetBufferHeight()), 0.1f, 100.0f);
+
+	double lastTime = 0.0f;
+	double deltaTime = 0.0f;
 
 	while (!window.ShouldClose())
 	{
 		glfwPollEvents();
+
+		double currentTime = glfwGetTime();
+		deltaTime = currentTime - lastTime;
+		lastTime = currentTime;
+
+		camera.KeyControls(window, deltaTime);
+		camera.MouseControls(window);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
 		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
@@ -71,6 +84,7 @@ int main(int argc, char* argv[])
 		auto& shader = s_ShaderList[0];
 		shader.Use();
 		shader.SetUniformMat4("u_Projection", projection);
+		shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
 
 		// Render first pyramid
 		shader.SetUniformMat4("u_Model", model);

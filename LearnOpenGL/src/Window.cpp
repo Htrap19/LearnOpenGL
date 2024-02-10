@@ -53,6 +53,7 @@ void Window::Initialize()
 	}
 
 	glfwSetWindowUserPointer(m_Window, this);
+	glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Initialize input callbacks
 	glfwSetKeyCallback(m_Window, HandleKeyCallback);
@@ -69,6 +70,11 @@ void Window::Cleanup()
 	s_WindowCount--;
 	if (s_WindowCount <= 0)
 		glfwTerminate();
+}
+
+bool Window::IsKeyPressed(uint32_t key) const
+{
+	return m_Keys[key];
 }
 
 GLfloat Window::GetDeltaX()
@@ -92,7 +98,7 @@ void Window::HandleKeyCallback(GLFWwindow* window, int key, int code, int action
 	if (key == GLFW_KEY_ESCAPE)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
-	win->m_Keys[key] = action == GLFW_PRESS;
+	win->m_Keys[key] = action == GLFW_PRESS || action == GLFW_REPEAT;
 }
 
 void Window::HandleCursorCallback(GLFWwindow* window, double xPos, double yPos)
