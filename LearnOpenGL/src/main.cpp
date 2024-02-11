@@ -11,6 +11,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "Texture.h"
 
 std::vector<Mesh> s_MeshList;
 std::vector<Shader> s_ShaderList;
@@ -26,10 +27,10 @@ static void CreateObjects()
 	GLsizei numOfIndices = sizeof(indices) / sizeof(indices[0]);
 
 	GLfloat vertices[] = {
-		-1.0f, -1.0f, 0.0f, // Bottom left
-		 0.0f, -1.0f, 1.0f, 
-		 1.0f, -1.0f, 0.0f, // Bottom right
-		 0.0f,  1.0f, 0.0f  // Middle top
+		-1.0f, -1.0f, 0.0f,		0.0f, 0.0f, // Bottom left
+		 0.0f, -1.0f, 1.0f,		0.5f, 0.0f,
+		 1.0f, -1.0f, 0.0f,		1.0f, 0.0f, // Bottom right
+		 0.0f,  1.0f, 0.0f,		0.5f, 1.0f  // Middle top
 	};
 	GLsizei numOfVertices = sizeof(vertices) / sizeof(vertices[0]);
 
@@ -58,6 +59,11 @@ int main(int argc, char* argv[])
 	CreateShader();
 
 	Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
+
+	Texture redBrickTexture;
+	redBrickTexture.LoadFromFile("resources/textures/brick.png");
+	Texture dirtTexture;
+	dirtTexture.LoadFromFile("resources/textures/dirt.png");
 
 	glm::mat4 projection = glm::perspective(45.0f, (window.GetBufferWidth() / window.GetBufferHeight()), 0.1f, 100.0f);
 
@@ -88,12 +94,14 @@ int main(int argc, char* argv[])
 
 		// Render first pyramid
 		shader.SetUniformMat4("u_Model", model);
+		redBrickTexture.UseTexture();
 		s_MeshList[0].Render();
 
 		// Render second pyramid
 		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, -2.5f));
 		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 		shader.SetUniformMat4("u_Model", model);
+		dirtTexture.UseTexture();
 		s_MeshList[1].Render();
 
 		glUseProgram(0);
