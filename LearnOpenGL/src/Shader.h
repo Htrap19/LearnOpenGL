@@ -20,6 +20,9 @@ public:
 	void Cleanup();
 	void Use();
 
+	void SetUniformF(const std::string& name, float value);
+	void SetUniformVec3(const std::string& name, const glm::vec3& value);
+	void SetUniformVec4(const std::string& name, const glm::vec4& value);
 	void SetUniformMat4(const std::string& name, const glm::mat4& value);
 
 private:
