@@ -20,12 +20,14 @@ void Mesh::Create(const std::vector<GLfloat>& vertices, const std::vector<GLuint
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
-	size_t stride = sizeof(vertices[0]) * 5;
+	size_t stride = sizeof(vertices[0]) * 8;
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, nullptr);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(vertices[0]) * 3));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(vertices[0]) * 5));
 
 	glBindVertexArray(0);						// unbind vertex array
 	glBindBuffer(GL_ARRAY_BUFFER, 0);			// unbind vertex buffer
