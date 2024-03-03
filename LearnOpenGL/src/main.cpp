@@ -13,6 +13,7 @@
 #include "Camera.h"
 #include "Texture.h"
 #include "Light.h"
+#include "Material.h"
 
 std::vector<Mesh> s_MeshList;
 std::vector<Shader> s_ShaderList;
@@ -58,10 +59,10 @@ static void CreateObjects()
 	GLsizei numOfIndices = sizeof(indices) / sizeof(indices[0]);
 
 	GLfloat vertices[] = {
-		-1.0f, -1.0f, 0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f, // Bottom left
-		 0.0f, -1.0f, 1.0f,		0.5f, 0.0f,		0.0f, 0.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,		1.0f, 0.0f,		0.0f, 0.0f, 0.0f, // Bottom right
-		 0.0f,  1.0f, 0.0f,		0.5f, 1.0f,		0.0f, 0.0f, 0.0f  // Middle top
+		-1.0f, -1.0f, -0.6f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f, // Bottom left
+		 0.0f, -1.0f,  1.0f,		0.5f, 0.0f,		0.0f, 0.0f, 0.0f,
+		 1.0f, -1.0f, -0.6f,		1.0f, 0.0f,		0.0f, 0.0f, 0.0f, // Bottom right
+		 0.0f,  1.0f,  0.0f,		0.5f, 1.0f,		0.0f, 0.0f, 0.0f  // Middle top
 	};
 	GLsizei numOfVertices = sizeof(vertices) / sizeof(vertices[0]);
 
@@ -85,7 +86,7 @@ void CreateShader()
 
 int main(int argc, char* argv[])
 {
-	Window window;
+	Window window("LearnOpenGL", 1366, 768);
 	window.Initialize();
 
 	CreateObjects();
@@ -98,7 +99,10 @@ int main(int argc, char* argv[])
 	Texture dirtTexture;
 	dirtTexture.LoadFromFile("resources/textures/dirt.png");
 
-	Light mainLight(glm::vec3{ 1.0f, 1.0f, 1.0f }, 0.2f, glm::vec3{ 2.0f, -1.0f, -2.0f }, 1.0f);
+	Light mainLight(glm::vec3{ 1.0f, 1.0f, 1.0f }, 0.1f, glm::vec3{ 0.0f, 0.0f, -1.0f }, 0.4f);
+
+	Material shinyMaterial(1.0f, 32);
+	Material dullMaterial(0.3f, 4);
 
 	glm::mat4 projection = glm::perspective(45.0f, (window.GetBufferWidth() / window.GetBufferHeight()), 0.1f, 100.0f);
 
@@ -117,7 +121,7 @@ int main(int argc, char* argv[])
 		camera.MouseControls(window);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
-		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -126,6 +130,7 @@ int main(int argc, char* argv[])
 		shader.Use();
 		shader.SetUniformMat4("u_Projection", projection);
 		shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
+		shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
 		mainLight.UseLight("u_DirectionalLight.color",
 						   "u_DirectionalLight.ambientIntensity",
 						   "u_DirectionalLight.direction",
@@ -135,13 +140,19 @@ int main(int argc, char* argv[])
 		// Render first pyramid
 		shader.SetUniformMat4("u_Model", model);
 		redBrickTexture.UseTexture();
+		shinyMaterial.UseMaterial("u_Material.specularIntensity",
+								  "u_Material.shininess",
+								  shader);
 		s_MeshList[0].Render();
 
 		// Render second pyramid
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, -2.5f));
-		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.0f, -2.5f));
+		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 		shader.SetUniformMat4("u_Model", model);
 		dirtTexture.UseTexture();
+		dullMaterial.UseMaterial("u_Material.specularIntensity",
+								 "u_Material.shininess",
+								 shader);
 		s_MeshList[1].Render();
 
 		glUseProgram(0);

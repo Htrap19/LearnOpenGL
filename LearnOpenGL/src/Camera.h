@@ -18,6 +18,7 @@ public:
 	void MouseControls(Window& window);
 
 	glm::mat4 CalculateViewMatrix() const;
+	inline glm::vec3 GetPosition() const { return m_Position; }
 
 private:
 	void Update();
