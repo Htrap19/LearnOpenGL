@@ -6,6 +6,11 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
+
+// Forward declaration
+class DirectionalLight;
+class PointLight;
 
 class Shader
 {
@@ -20,10 +25,14 @@ public:
 	void Cleanup();
 	void Use();
 
+	void SetUniformI(const std::string& name, int value);
 	void SetUniformF(const std::string& name, float value);
 	void SetUniformVec3(const std::string& name, const glm::vec3& value);
 	void SetUniformVec4(const std::string& name, const glm::vec4& value);
 	void SetUniformMat4(const std::string& name, const glm::mat4& value);
+
+	void SetDirectionalLight(const DirectionalLight& light);
+	void SetPointLights(const std::vector<PointLight>& lights);
 
 private:
 	void CreateProgram(const std::string& vertexSource,

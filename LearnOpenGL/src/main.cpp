@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -12,10 +13,11 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Texture.h"
-#include "Light.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
 #include "Material.h"
 
-std::vector<Mesh> s_MeshList;
+std::vector<std::shared_ptr<Mesh>> s_MeshList;
 std::vector<Shader> s_ShaderList;
 
 static void CalculateAverageNormals(GLuint* indices, GLsizei numberOfIndices,
@@ -68,13 +70,34 @@ static void CreateObjects()
 
 	CalculateAverageNormals(indices, numOfIndices, vertices, numOfVertices, 8, 5);
 
-	Mesh& firstPyramid = s_MeshList.emplace_back();
-	firstPyramid.Create(std::vector<GLfloat>(vertices, vertices + numOfVertices), 
+	auto firstPyramid = std::make_shared<Mesh>();
+	firstPyramid->Create(std::vector<GLfloat>(vertices, vertices + numOfVertices), 
 						std::vector<GLuint>(indices, indices + numOfIndices));
+	s_MeshList.push_back(firstPyramid);
 
-	Mesh& secondPyramid = s_MeshList.emplace_back();
-	secondPyramid.Create(std::vector<GLfloat>(vertices, vertices + numOfVertices),
+	auto secondPyramid = std::make_shared<Mesh>();
+	secondPyramid->Create(std::vector<GLfloat>(vertices, vertices + numOfVertices),
 						 std::vector<GLuint>(indices, indices + numOfIndices));
+	s_MeshList.push_back(secondPyramid);
+
+	GLfloat floorVertices[] = {
+		-10.0f, 0.0f, -10.0f,		 0.0f,  0.0f,	0.0f, -1.0f, 0.0f,
+		 10.0f, 0.0f, -10.0f,		10.0f,  0.0f,	0.0f, -1.0f, 0.0f,
+		-10.0f, 0.0f,  10.0f,		 0.0f, 10.0f,	0.0f, -1.0f, 0.0f,
+		 10.0f, 0.0f,  10.0f,		10.0f, 10.0f,	0.0f, -1.0f, 0.0f
+	};
+	GLsizei numOfFloorVertices = sizeof(floorVertices) / sizeof(floorVertices[0]);
+
+	GLuint floorIndices[] = {
+		0, 2, 1,
+		1, 2, 3
+	};
+	GLsizei numOfFloorIndices = sizeof(floorIndices) / sizeof(floorIndices[0]);
+
+	auto floor = std::make_shared<Mesh>();
+	floor->Create(std::vector<GLfloat>(floorVertices, floorVertices + numOfFloorVertices),
+				 std::vector<GLuint>(floorIndices, floorIndices + numOfFloorIndices));
+	s_MeshList.push_back(floor);
 }
 
 void CreateShader()
@@ -98,8 +121,22 @@ int main(int argc, char* argv[])
 	redBrickTexture.LoadFromFile("resources/textures/brick.png");
 	Texture dirtTexture;
 	dirtTexture.LoadFromFile("resources/textures/dirt.png");
+	Texture plainTexture;
+	plainTexture.LoadFromFile("resources/textures/plain.png");
 
-	Light mainLight(glm::vec3{ 1.0f, 1.0f, 1.0f }, 0.1f, glm::vec3{ 0.0f, 0.0f, -1.0f }, 0.4f);
+	DirectionalLight mainLight(glm::vec3{ 1.0f, 1.0f, 1.0f }, 
+							   0.1f, 0.4f,
+							   glm::vec3{ 0.0f, 0.0f, -1.0f });
+
+	std::vector<PointLight> pointLights;
+	pointLights.emplace_back(glm::vec3{ 0.0f, 0.0f, 1.0f },
+							 0.1f, 1.0f,
+							 glm::vec3{ 4.0f, 0.0f, 0.0f },
+							 0.3f, 0.2f, 0.1f);
+	pointLights.emplace_back(glm::vec3{ 0.0f, 1.0f, 0.0f },
+							 0.1f, 1.0f,
+							 glm::vec3{ -4.0f, 2.0f, 0.0f },
+							 0.3f, 0.2f, 0.1f);
 
 	Material shinyMaterial(1.0f, 32);
 	Material dullMaterial(0.3f, 4);
@@ -120,9 +157,6 @@ int main(int argc, char* argv[])
 		camera.KeyControls(window, deltaTime);
 		camera.MouseControls(window);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
-		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -131,19 +165,19 @@ int main(int argc, char* argv[])
 		shader.SetUniformMat4("u_Projection", projection);
 		shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
 		shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
-		mainLight.UseLight("u_DirectionalLight.color",
-						   "u_DirectionalLight.ambientIntensity",
-						   "u_DirectionalLight.direction",
-						   "u_DirectionalLight.diffuseIntensity",
-						   shader);
+		
+		shader.SetDirectionalLight(mainLight);
+		shader.SetPointLights(pointLights);
 
 		// Render first pyramid
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
+		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 		shader.SetUniformMat4("u_Model", model);
 		redBrickTexture.UseTexture();
 		shinyMaterial.UseMaterial("u_Material.specularIntensity",
 								  "u_Material.shininess",
 								  shader);
-		s_MeshList[0].Render();
+		s_MeshList[0]->Render();
 
 		// Render second pyramid
 		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.0f, -2.5f));
@@ -153,7 +187,17 @@ int main(int argc, char* argv[])
 		dullMaterial.UseMaterial("u_Material.specularIntensity",
 								 "u_Material.shininess",
 								 shader);
-		s_MeshList[1].Render();
+		s_MeshList[1]->Render();
+
+		// Render floor
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+		shader.SetUniformMat4("u_Model", model);
+		plainTexture.UseTexture();
+		shinyMaterial.UseMaterial("u_Material.specularIntensity",
+								  "u_Material.shininess",
+								  shader);
+		s_MeshList[2]->Render();
 
 		glUseProgram(0);
 

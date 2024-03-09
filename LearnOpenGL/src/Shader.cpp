@@ -5,6 +5,10 @@
 #include <iostream>
 #include <fstream>
 
+#include "DirectionalLight.h"
+#include "PointLight.h"
+#include "Common.h"
+
 Shader::~Shader()
 {
 	Cleanup();
@@ -34,6 +38,11 @@ void Shader::Use()
 	glUseProgram(m_Program);
 }
 
+void Shader::SetUniformI(const std::string& name, int value)
+{
+	glUniform1i(GetUniformLocation(name), value);
+}
+
 void Shader::SetUniformF(const std::string& name, float value)
 {
 	glUniform1f(GetUniformLocation(name), value);
@@ -52,6 +61,39 @@ void Shader::SetUniformVec4(const std::string& name, const glm::vec4& value)
 void Shader::SetUniformMat4(const std::string& name, const glm::mat4& value)
 {
 	glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Shader::SetDirectionalLight(const DirectionalLight& light)
+{
+	light.UseLight("u_DirectionalLight.base.color",
+				   "u_DirectionalLight.base.ambientIntensity",
+				   "u_DirectionalLight.base.diffuseIntensity",
+				   "u_DirectionalLight.direction",
+				   *this);
+}
+
+void Shader::SetPointLights(const std::vector<PointLight>& lights)
+{
+	size_t lightCount = lights.size();
+	if (lightCount > MAX_POINTLIGHTS)
+		lightCount = MAX_POINTLIGHTS;
+
+	SetUniformI("u_PointLightCount", lightCount);
+	std::string pointLightUniform;
+	pointLightUniform.resize(100);
+	for (size_t i = 0; i < lightCount; i++)
+	{
+		pointLightUniform = "u_PointLights[" + std::to_string(i) + "]";
+
+		lights[i].UseLight(pointLightUniform + ".base.color",
+						   pointLightUniform + ".base.ambientIntensity",
+						   pointLightUniform + ".base.diffuseIntensity",
+						   pointLightUniform + ".position",
+						   pointLightUniform + ".constant",
+						   pointLightUniform + ".linear",
+						   pointLightUniform + ".exponent",
+						   *this);
+	}
 }
 
 void Shader::CreateProgram(const std::string& vertexSource, const std::string& fragmentSource)
