@@ -19,6 +19,7 @@ public:
 
 	glm::mat4 CalculateViewMatrix() const;
 	inline glm::vec3 GetPosition() const { return m_Position; }
+	inline glm::vec3 GetFront() const { return m_Front; }
 
 private:
 	void Update();

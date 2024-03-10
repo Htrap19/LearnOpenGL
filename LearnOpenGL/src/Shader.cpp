@@ -7,6 +7,7 @@
 
 #include "DirectionalLight.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 #include "Common.h"
 
 Shader::~Shader()
@@ -92,6 +93,32 @@ void Shader::SetPointLights(const std::vector<PointLight>& lights)
 						   pointLightUniform + ".constant",
 						   pointLightUniform + ".linear",
 						   pointLightUniform + ".exponent",
+						   *this);
+	}
+}
+
+void Shader::SetSpotLights(const std::vector<SpotLight>& lights)
+{
+	size_t lightCount = lights.size();
+	if (lightCount > MAX_SPOTLIGHTS)
+		lightCount = MAX_SPOTLIGHTS;
+
+	SetUniformI("u_SpotLightCount", lightCount);
+	std::string spotLightUniform;
+	spotLightUniform.resize(100);
+	for (size_t i = 0; i < lightCount; i++)
+	{
+		spotLightUniform = "u_SpotLights[" + std::to_string(i) + "]";
+
+		lights[i].UseLight(spotLightUniform + ".base.base.color",
+						   spotLightUniform + ".base.base.ambientIntensity",
+						   spotLightUniform + ".base.base.diffuseIntensity",
+						   spotLightUniform + ".base.position",
+						   spotLightUniform + ".direction",
+						   spotLightUniform + ".base.constant",
+						   spotLightUniform + ".base.linear",
+						   spotLightUniform + ".base.exponent",
+						   spotLightUniform + ".edge",
 						   *this);
 	}
 }

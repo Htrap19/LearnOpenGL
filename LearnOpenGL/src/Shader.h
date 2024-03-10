@@ -11,6 +11,7 @@
 // Forward declaration
 class DirectionalLight;
 class PointLight;
+class SpotLight;
 
 class Shader
 {
@@ -33,6 +34,7 @@ public:
 
 	void SetDirectionalLight(const DirectionalLight& light);
 	void SetPointLights(const std::vector<PointLight>& lights);
+	void SetSpotLights(const std::vector<SpotLight>& lights);
 
 private:
 	void CreateProgram(const std::string& vertexSource,

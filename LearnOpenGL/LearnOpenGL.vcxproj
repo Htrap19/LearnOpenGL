@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\vendor\STB\stb_image.cpp" />
+    <ClCompile Include="src\SpotLight.cpp" />
     <ClCompile Include="src\PointLight.cpp" />
     <ClCompile Include="src\DirectionalLight.cpp" />
     <ClCompile Include="src\Material.cpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\SpotLight.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\PointLight.h" />
     <ClInclude Include="src\DirectionalLight.h" />

@@ -19,7 +19,7 @@ public:
 				  const std::string& exponentUniform,
 				  Shader& shader) const;
 
-private:
+protected:
 	glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
 	float m_Constant = 1.0f, m_Linear = 0.0f, m_Exponent = 0.0f;
 };

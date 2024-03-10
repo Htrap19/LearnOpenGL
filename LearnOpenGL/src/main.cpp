@@ -15,6 +15,7 @@
 #include "Texture.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 #include "Material.h"
 
 std::vector<std::shared_ptr<Mesh>> s_MeshList;
@@ -138,6 +139,20 @@ int main(int argc, char* argv[])
 							 glm::vec3{ -4.0f, 2.0f, 0.0f },
 							 0.3f, 0.2f, 0.1f);
 
+	std::vector<SpotLight> spotLights;
+	spotLights.emplace_back(glm::vec3{ 1.0f, 1.0f, 1.0f },
+							0.1f, 1.0f,
+							glm::vec3{ 8.0f, 4.0f, 0.0f },
+							glm::vec3{ 0.0f, -1.0f, 0.0f },
+							0.3f, 0.2f, 0.1f,
+							20.0f);
+	spotLights.emplace_back(glm::vec3{ 1.0f, 1.0f, 1.0f },
+							0.1f, 1.0f,
+							glm::vec3{ 0.0f, 0.0f, 0.0f },
+							glm::vec3{ 0.0f, -1.0f, 0.0f },
+							0.3f, 0.2f, 0.1f,
+							20.0f);
+
 	Material shinyMaterial(1.0f, 32);
 	Material dullMaterial(0.3f, 4);
 
@@ -165,9 +180,14 @@ int main(int argc, char* argv[])
 		shader.SetUniformMat4("u_Projection", projection);
 		shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
 		shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
+
+		glm::vec3 lowerLight = camera.GetPosition();
+		lowerLight.y -= 0.3f;
+		spotLights[1].SetFlash(lowerLight, camera.GetFront());
 		
 		shader.SetDirectionalLight(mainLight);
 		shader.SetPointLights(pointLights);
+		shader.SetSpotLights(spotLights);
 
 		// Render first pyramid
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
@@ -193,7 +213,7 @@ int main(int argc, char* argv[])
 		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
 		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 		shader.SetUniformMat4("u_Model", model);
-		plainTexture.UseTexture();
+		dirtTexture.UseTexture();
 		shinyMaterial.UseMaterial("u_Material.specularIntensity",
 								  "u_Material.shininess",
 								  shader);
