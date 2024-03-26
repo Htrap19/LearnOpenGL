@@ -12,7 +12,7 @@ public:
 	Texture() = default;
 	~Texture();
 
-	void LoadFromFile(const std::string& filepath);
+	bool LoadFromFile(const std::string& filepath);
 	void UseTexture(uint32_t slot = 0);
 	void ClearTexture();
 

@@ -17,6 +17,7 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "Material.h"
+#include "Model.h"
 
 std::vector<std::shared_ptr<Mesh>> s_MeshList;
 std::vector<Shader> s_ShaderList;
@@ -82,10 +83,10 @@ static void CreateObjects()
 	s_MeshList.push_back(secondPyramid);
 
 	GLfloat floorVertices[] = {
-		-10.0f, 0.0f, -10.0f,		 0.0f,  0.0f,	0.0f, -1.0f, 0.0f,
-		 10.0f, 0.0f, -10.0f,		10.0f,  0.0f,	0.0f, -1.0f, 0.0f,
-		-10.0f, 0.0f,  10.0f,		 0.0f, 10.0f,	0.0f, -1.0f, 0.0f,
-		 10.0f, 0.0f,  10.0f,		10.0f, 10.0f,	0.0f, -1.0f, 0.0f
+		-50.0f, 0.0f, -50.0f,		 0.0f,  0.0f,	0.0f, -1.0f, 0.0f,
+		 50.0f, 0.0f, -50.0f,		50.0f,  0.0f,	0.0f, -1.0f, 0.0f,
+		-50.0f, 0.0f,  50.0f,		 0.0f, 50.0f,	0.0f, -1.0f, 0.0f,
+		 50.0f, 0.0f,  50.0f,		50.0f, 50.0f,	0.0f, -1.0f, 0.0f
 	};
 	GLsizei numOfFloorVertices = sizeof(floorVertices) / sizeof(floorVertices[0]);
 
@@ -126,8 +127,8 @@ int main(int argc, char* argv[])
 	plainTexture.LoadFromFile("resources/textures/plain.png");
 
 	DirectionalLight mainLight(glm::vec3{ 1.0f, 1.0f, 1.0f }, 
-							   0.1f, 0.4f,
-							   glm::vec3{ 0.0f, 0.0f, -1.0f });
+							   0.1f, 0.2f,
+							   glm::vec3{ 0.0f, -1.0f, 0.0f });
 
 	std::vector<PointLight> pointLights;
 	pointLights.emplace_back(glm::vec3{ 0.0f, 0.0f, 1.0f },
@@ -155,6 +156,9 @@ int main(int argc, char* argv[])
 
 	Material shinyMaterial(1.0f, 32);
 	Material dullMaterial(0.3f, 4);
+	
+	Model uh60;
+	uh60.Load("resources/models/uh60.obj");
 
 	glm::mat4 projection = glm::perspective(45.0f, (window.GetBufferWidth() / window.GetBufferHeight()), 0.1f, 100.0f);
 
@@ -218,6 +222,15 @@ int main(int argc, char* argv[])
 								  "u_Material.shininess",
 								  shader);
 		s_MeshList[2]->Render();
+
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(-4.0f, 0.0f, -4.0f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f));
+		shader.SetUniformMat4("u_Model", model);
+		shinyMaterial.UseMaterial("u_Material.specularIntensity",
+								  "u_Material.shininess",
+								  shader);
+		uh60.Render();
 
 		glUseProgram(0);
 

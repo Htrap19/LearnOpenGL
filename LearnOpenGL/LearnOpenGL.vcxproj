@@ -108,14 +108,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)vendor\GLEW\include;$(SolutionDir)vendor\GLFW\include;$(SolutionDir)vendor\GLM;$(SolutionDir)vendor\STB;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vendor\ASSIMP\include;$(SolutionDir)vendor\GLEW\include;$(SolutionDir)vendor\GLFW\include;$(SolutionDir)vendor\GLM;$(SolutionDir)vendor\STB;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)vendor\GLEW\lib\Release\x64;$(SolutionDir)vendor\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)vendor\GLEW\lib\Release\x64;$(SolutionDir)vendor\GLFW\lib-vc2022;$(SolutionDir)vendor\ASSIMP\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;assimp-vc143-mtd.lib;zlibstaticd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\vendor\STB\stb_image.cpp" />
+    <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\SpotLight.cpp" />
     <ClCompile Include="src\PointLight.cpp" />
     <ClCompile Include="src\DirectionalLight.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\SpotLight.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\PointLight.h" />
