@@ -14,7 +14,7 @@ public:
 
 	bool LoadFromFile(const std::string& filepath);
 	void UseTexture(uint32_t slot = 0);
-	void ClearTexture();
+	void Clear();
 
 	inline uint32_t GetWidth() const { return m_Width; }
 	inline uint32_t GetHeight() const { return m_Height; }

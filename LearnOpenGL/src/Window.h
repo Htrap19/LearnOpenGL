@@ -15,12 +15,15 @@ public:
 	void Initialize();
 	void Cleanup();
 	inline bool ShouldClose() const { return glfwWindowShouldClose(m_Window); }
-	void SwapBuffers() const { glfwSwapBuffers(m_Window); }
+	inline void SwapBuffers() const { glfwSwapBuffers(m_Window); }
 
 	inline uint32_t GetWidth() const { return m_Width; }
 	inline uint32_t GetHeight() const { return m_Height; }
 	inline GLfloat GetBufferWidth() const { return (GLfloat)m_BufferWidth; }
 	inline GLfloat GetBufferHeight() const { return (GLfloat)m_BufferHeight; }
+
+	void SetDefaultViewport();
+	void SetViewport(uint32_t width, uint32_t height);
 
 	bool IsKeyPressed(uint32_t key) const;
 

@@ -8,10 +8,12 @@ out vec4 v_VCol;
 out vec2 v_TexCoord;
 out vec3 v_Normal;
 out vec3 v_FragPos;
+out vec4 v_DirectionalLightSpacePos;
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
 uniform mat4 u_Projection;
+uniform mat4 u_DirectionalLightTransform;
 
 void main()
 {
@@ -20,4 +22,5 @@ void main()
 	v_TexCoord = a_TexCoord;
 	v_Normal = mat3(transpose(inverse(u_Model))) * a_Normal;
 	v_FragPos = (u_Model * vec4(a_Pos, 1.0)).xyz;
+	v_DirectionalLightSpacePos = u_DirectionalLightTransform * vec4(v_FragPos, 1.0);
 }

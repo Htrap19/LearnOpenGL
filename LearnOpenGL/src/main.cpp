@@ -21,6 +21,16 @@
 
 std::vector<std::shared_ptr<Mesh>> s_MeshList;
 std::vector<Shader> s_ShaderList;
+Shader directionShadowMapShader;
+
+Texture redBrickTexture;
+Texture dirtTexture;
+Texture plainTexture;
+
+Material shinyMaterial(1.0f, 32);
+Material dullMaterial(0.3f, 4);
+
+Model uh60;
 
 static void CalculateAverageNormals(GLuint* indices, GLsizei numberOfIndices,
 									GLfloat* vertices, GLsizei numberOfVertices,
@@ -107,6 +117,110 @@ void CreateShader()
 	auto& shader = s_ShaderList.emplace_back();
 	shader.CreateFromFile("resources/shaders/shader.vert.glsl",
 						  "resources/shaders/shader.frag.glsl");
+
+	directionShadowMapShader.CreateFromFile("resources/shaders/directional_shadowmap.vert.glsl",
+											"resources/shaders/directional_shadowmap.frag.glsl");
+}
+
+void RenderScene(Window& window,
+				 DirectionalLight& mainLight,
+				 std::vector<PointLight>& pointLights,
+				 std::vector<SpotLight>& spotLights,
+				 Camera& camera,
+				 Shader& shader,
+				 const glm::mat4& projection)
+{
+	// Render first pyramid
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
+	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+	shader.SetUniformMat4("u_Model", model);
+	redBrickTexture.UseTexture();
+	shinyMaterial.UseMaterial("u_Material.specularIntensity",
+							  "u_Material.shininess",
+							  shader);
+	s_MeshList[0]->Render();
+
+	// Render second pyramid
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.0f, -2.5f));
+	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+	shader.SetUniformMat4("u_Model", model);
+	dirtTexture.UseTexture();
+	dullMaterial.UseMaterial("u_Material.specularIntensity",
+							 "u_Material.shininess",
+							 shader);
+	s_MeshList[1]->Render();
+
+	// Render floor
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
+	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
+	shader.SetUniformMat4("u_Model", model);
+	dirtTexture.UseTexture();
+	shinyMaterial.UseMaterial("u_Material.specularIntensity",
+							  "u_Material.shininess",
+							  shader);
+	s_MeshList[2]->Render();
+
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(-4.0f, 0.0f, -4.0f));
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(0.4f));
+	shader.SetUniformMat4("u_Model", model);
+	shinyMaterial.UseMaterial("u_Material.specularIntensity",
+							  "u_Material.shininess",
+							  shader);
+	uh60.Render();
+}
+
+void ShadowPass(Window& window,
+				DirectionalLight& light,
+				std::vector<PointLight>& pointLights,
+				std::vector<SpotLight>& spotLights,
+				Camera& camera)
+{
+	directionShadowMapShader.Use();
+	auto& shadowMap = light.GetShadowMap();
+
+	window.SetViewport(shadowMap.GetTextureWidth(), shadowMap.GetTextureHeight());
+
+	shadowMap.Write();
+	glClear(GL_DEPTH_BUFFER_BIT);
+	directionShadowMapShader.SetUniformMat4("u_DirectionalLightTransform", light.CalcLightTransform());
+
+	RenderScene(window, light, pointLights, spotLights, camera, directionShadowMapShader, glm::mat4(1.0f));
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderPass(Window& window,
+				DirectionalLight& mainLight,
+				std::vector<PointLight>& pointLights,
+				std::vector<SpotLight>& spotLights,
+				Camera& camera,
+				const glm::mat4& projection)
+{
+	auto& shader = s_ShaderList[0];
+	shader.Use();
+	window.SetDefaultViewport();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	shader.SetUniformMat4("u_Projection", projection);
+	shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
+	shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
+	mainLight.GetShadowMap().Use(1);
+	shader.SetUniformI("u_ShadowMap", 1);
+	shader.SetUniformMat4("u_DirectionalLightTransform", mainLight.CalcLightTransform());
+
+	glm::vec3 lowerLight = camera.GetPosition();
+	lowerLight.y -= 0.3f;
+	//spotLights[1].SetFlash(lowerLight, camera.GetFront());
+
+	shader.SetDirectionalLight(mainLight);
+	shader.SetPointLights(pointLights);
+	shader.SetSpotLights(spotLights);
+
+	RenderScene(window, mainLight, pointLights, spotLights, camera, shader, projection);
+
+	glUseProgram(0);
 }
 
 int main(int argc, char* argv[])
@@ -119,16 +233,14 @@ int main(int argc, char* argv[])
 
 	Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
 
-	Texture redBrickTexture;
 	redBrickTexture.LoadFromFile("resources/textures/brick.png");
-	Texture dirtTexture;
 	dirtTexture.LoadFromFile("resources/textures/dirt.png");
-	Texture plainTexture;
 	plainTexture.LoadFromFile("resources/textures/plain.png");
 
-	DirectionalLight mainLight(glm::vec3{ 1.0f, 1.0f, 1.0f }, 
-							   0.1f, 0.2f,
-							   glm::vec3{ 0.0f, -1.0f, 0.0f });
+	DirectionalLight mainLight(4096, 4096,
+							   glm::vec3{ 1.0f, 1.0f, 1.0f }, 
+							   0.1f, 0.6f,
+							   glm::vec3{ 0.0f, -7.0f, 2.0f });
 
 	std::vector<PointLight> pointLights;
 	pointLights.emplace_back(glm::vec3{ 0.0f, 0.0f, 1.0f },
@@ -153,11 +265,7 @@ int main(int argc, char* argv[])
 							glm::vec3{ 0.0f, -1.0f, 0.0f },
 							0.3f, 0.2f, 0.1f,
 							20.0f);
-
-	Material shinyMaterial(1.0f, 32);
-	Material dullMaterial(0.3f, 4);
 	
-	Model uh60;
 	uh60.Load("resources/models/uh60.obj");
 
 	glm::mat4 projection = glm::perspective(45.0f, (window.GetBufferWidth() / window.GetBufferHeight()), 0.1f, 100.0f);
@@ -176,63 +284,8 @@ int main(int argc, char* argv[])
 		camera.KeyControls(window, deltaTime);
 		camera.MouseControls(window);
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		auto& shader = s_ShaderList[0];
-		shader.Use();
-		shader.SetUniformMat4("u_Projection", projection);
-		shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
-		shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
-
-		glm::vec3 lowerLight = camera.GetPosition();
-		lowerLight.y -= 0.3f;
-		spotLights[1].SetFlash(lowerLight, camera.GetFront());
-		
-		shader.SetDirectionalLight(mainLight);
-		shader.SetPointLights(pointLights);
-		shader.SetSpotLights(spotLights);
-
-		// Render first pyramid
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
-		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-		shader.SetUniformMat4("u_Model", model);
-		redBrickTexture.UseTexture();
-		shinyMaterial.UseMaterial("u_Material.specularIntensity",
-								  "u_Material.shininess",
-								  shader);
-		s_MeshList[0]->Render();
-
-		// Render second pyramid
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.0f, -2.5f));
-		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-		shader.SetUniformMat4("u_Model", model);
-		dirtTexture.UseTexture();
-		dullMaterial.UseMaterial("u_Material.specularIntensity",
-								 "u_Material.shininess",
-								 shader);
-		s_MeshList[1]->Render();
-
-		// Render floor
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
-		//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-		shader.SetUniformMat4("u_Model", model);
-		dirtTexture.UseTexture();
-		shinyMaterial.UseMaterial("u_Material.specularIntensity",
-								  "u_Material.shininess",
-								  shader);
-		s_MeshList[2]->Render();
-
-		model = glm::translate(glm::mat4(1.0f), glm::vec3(-4.0f, 0.0f, -4.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(0.4f));
-		shader.SetUniformMat4("u_Model", model);
-		shinyMaterial.UseMaterial("u_Material.specularIntensity",
-								  "u_Material.shininess",
-								  shader);
-		uh60.Render();
-
-		glUseProgram(0);
+		ShadowPass(window, mainLight, pointLights, spotLights, camera);
+		RenderPass(window, mainLight, pointLights, spotLights, camera, projection);
 
 		window.SwapBuffers();
 	}

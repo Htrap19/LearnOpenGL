@@ -61,7 +61,7 @@ void Window::Initialize()
 
 	glEnable(GL_DEPTH_TEST);
 
-	glViewport(0, 0, m_BufferWidth, m_BufferHeight);
+	SetDefaultViewport();
 }
 
 void Window::Cleanup()
@@ -70,6 +70,16 @@ void Window::Cleanup()
 	s_WindowCount--;
 	if (s_WindowCount <= 0)
 		glfwTerminate();
+}
+
+void Window::SetDefaultViewport()
+{
+	SetViewport(m_BufferWidth, m_BufferHeight);
+}
+
+void Window::SetViewport(uint32_t width, uint32_t height)
+{
+	glViewport(0, 0, width, height);
 }
 
 bool Window::IsKeyPressed(uint32_t key) const

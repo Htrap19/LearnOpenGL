@@ -2,7 +2,7 @@
 
 Texture::~Texture()
 {
-	ClearTexture();
+	Clear();
 }
 
 bool Texture::LoadFromFile(const std::string& filepath)
@@ -54,7 +54,7 @@ void Texture::UseTexture(uint32_t slot)
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 
-void Texture::ClearTexture()
+void Texture::Clear()
 {
 	glDeleteTextures(1, &m_Texture);
 }

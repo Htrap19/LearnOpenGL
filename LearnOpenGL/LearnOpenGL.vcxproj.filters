@@ -54,6 +54,9 @@
     <ClCompile Include="src\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ShadowMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Mesh.h">
@@ -92,9 +95,14 @@
     <ClInclude Include="src\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ShadowMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\shader.frag.glsl" />
     <None Include="resources\shaders\shader.vert.glsl" />
+    <None Include="resources\shaders\directional_shadowmap.frag.glsl" />
+    <None Include="resources\shaders\directional_shadowmap.vert.glsl" />
   </ItemGroup>
 </Project>

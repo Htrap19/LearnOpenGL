@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\vendor\STB\stb_image.cpp" />
+    <ClCompile Include="src\ShadowMap.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\SpotLight.cpp" />
     <ClCompile Include="src\PointLight.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ShadowMap.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\SpotLight.h" />
     <ClInclude Include="src\Common.h" />
@@ -168,6 +170,8 @@
     <ClInclude Include="src\Texture.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\directional_shadowmap.frag.glsl" />
+    <None Include="resources\shaders\directional_shadowmap.vert.glsl" />
     <None Include="resources\shaders\shader.frag.glsl" />
     <None Include="resources\shaders\shader.vert.glsl" />
   </ItemGroup>
