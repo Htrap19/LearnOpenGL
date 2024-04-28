@@ -6,7 +6,9 @@ class SpotLight : public PointLight
 {
 public:
 	SpotLight() = default;
-	SpotLight(const glm::vec3& color, float ambientIntensity, float diffuseIntensity,
+	SpotLight(uint32_t shadowMapWidth, uint32_t shadowMapHeight,
+			  float nearPlane, float farPlane,
+			  const glm::vec3& color, float ambientIntensity, float diffuseIntensity,
 			  const glm::vec3& position,
 			  const glm::vec3& direction,
 			  float constant, float linear, float exponent,

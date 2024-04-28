@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 // Forward declaration
 class DirectionalLight;
@@ -23,6 +24,13 @@ public:
 						  const std::string& fragmentSource);
 	void CreateFromFile(const std::string& vertexFile,
 						const std::string& fragmentFile);
+
+	void CreateFromString(const std::string& vertexSource,
+						  const std::string& geometrySource,
+						  const std::string& fragmentSource);
+	void CreateFromFile(const std::string& vertexFile,
+						const std::string& geometryFile,
+						const std::string& fragmentFile);
 	void Cleanup();
 	void Use();
 
@@ -31,13 +39,15 @@ public:
 	void SetUniformVec3(const std::string& name, const glm::vec3& value);
 	void SetUniformVec4(const std::string& name, const glm::vec4& value);
 	void SetUniformMat4(const std::string& name, const glm::mat4& value);
+	void SetUniformMat4v(const std::string& name, const std::vector<glm::mat4>& values);
 
 	void SetDirectionalLight(const DirectionalLight& light);
-	void SetPointLights(const std::vector<PointLight>& lights);
-	void SetSpotLights(const std::vector<SpotLight>& lights);
+	void SetPointLights(const std::vector<std::shared_ptr<PointLight>>& lights);
+	void SetSpotLights(const std::vector<std::shared_ptr<SpotLight>>& lights);
 
 private:
 	void CreateProgram(const std::string& vertexSource,
+					   const std::string& geometrySource,
 					   const std::string& fragmentSource);
 	GLuint CreateShader(const std::string& source, GLenum type);
 	GLuint GetUniformLocation(const std::string& name);

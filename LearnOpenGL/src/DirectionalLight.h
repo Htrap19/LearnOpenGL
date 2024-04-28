@@ -16,7 +16,7 @@ public:
 				  const std::string& directionUniform,
 				  Shader& shader) const;
 
-	virtual glm::mat4 CalcLightTransform() const override;
+	glm::mat4 CalcLightTransform() const;
 
 private:
 	glm::vec3 m_Direction = { 0.0f, -1.0f, 0.0f };

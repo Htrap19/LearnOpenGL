@@ -12,14 +12,12 @@ class Light
 {
 public:
 	Light() = default;
-	Light(uint32_t shadowMapWidth,
-		  uint32_t shadowMapHeight,
-		  const glm::vec3& color,
+	Light(const glm::vec3& color,
 		  float ambientIntensity,
 		  float diffuseIntensity);
+	~Light();
 
-	virtual glm::mat4 CalcLightTransform() const { return glm::mat4(1.0f); }
-	inline ShadowMap& GetShadowMap() { return m_ShadowMap; }
+	inline ShadowMap* GetShadowMap() { return m_ShadowMap; }
 
 protected:
 	void UseLight(const std::string& colorUniform, 
@@ -33,6 +31,6 @@ protected:
 	float m_DiffuseIntensity = 1.0f;
 
 	glm::mat4 m_LightProjection = glm::mat4(1.0f);
-	ShadowMap m_ShadowMap;
+	ShadowMap* m_ShadowMap = nullptr;
 };
 

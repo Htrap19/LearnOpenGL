@@ -18,7 +18,7 @@ Shader::~Shader()
 void Shader::CreateFromString(const std::string& vertexSource, 
 						      const std::string& fragmentSource)
 {
-	CreateProgram(vertexSource, fragmentSource);
+	CreateProgram(vertexSource, "", fragmentSource);
 }
 
 void Shader::CreateFromFile(const std::string& vertexFile, const std::string& fragmentFile)
@@ -26,7 +26,21 @@ void Shader::CreateFromFile(const std::string& vertexFile, const std::string& fr
 	std::string vertexSource = ReadFile(vertexFile);
 	std::string fragmentSource = ReadFile(fragmentFile);
 
-	CreateProgram(vertexSource, fragmentSource);
+	CreateProgram(vertexSource, "", fragmentSource);
+}
+
+void Shader::CreateFromString(const std::string& vertexSource, const std::string& geometrySource, const std::string& fragmentSource)
+{
+	CreateProgram(vertexSource, geometrySource, fragmentSource);
+}
+
+void Shader::CreateFromFile(const std::string& vertexFile, const std::string& geometryFile, const std::string& fragmentFile)
+{
+	std::string vertexSource = ReadFile(vertexFile);
+	std::string geometrySource = ReadFile(geometryFile);
+	std::string fragmentSource = ReadFile(fragmentFile);
+
+	CreateProgram(vertexSource, geometrySource, fragmentSource);
 }
 
 void Shader::Cleanup()
@@ -64,6 +78,11 @@ void Shader::SetUniformMat4(const std::string& name, const glm::mat4& value)
 	glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
+void Shader::SetUniformMat4v(const std::string& name, const std::vector<glm::mat4>& values)
+{
+	glUniformMatrix4fv(GetUniformLocation(name), values.size(), GL_FALSE, &values[0][0][0]);
+}
+
 void Shader::SetDirectionalLight(const DirectionalLight& light)
 {
 	light.UseLight("u_DirectionalLight.base.color",
@@ -73,7 +92,7 @@ void Shader::SetDirectionalLight(const DirectionalLight& light)
 				   *this);
 }
 
-void Shader::SetPointLights(const std::vector<PointLight>& lights)
+void Shader::SetPointLights(const std::vector<std::shared_ptr<PointLight>>& lights)
 {
 	size_t lightCount = lights.size();
 	if (lightCount > MAX_POINTLIGHTS)
@@ -86,18 +105,18 @@ void Shader::SetPointLights(const std::vector<PointLight>& lights)
 	{
 		pointLightUniform = "u_PointLights[" + std::to_string(i) + "]";
 
-		lights[i].UseLight(pointLightUniform + ".base.color",
-						   pointLightUniform + ".base.ambientIntensity",
-						   pointLightUniform + ".base.diffuseIntensity",
-						   pointLightUniform + ".position",
-						   pointLightUniform + ".constant",
-						   pointLightUniform + ".linear",
-						   pointLightUniform + ".exponent",
-						   *this);
+		lights[i]->UseLight(pointLightUniform + ".base.color",
+						    pointLightUniform + ".base.ambientIntensity",
+						    pointLightUniform + ".base.diffuseIntensity",
+						    pointLightUniform + ".position",
+						    pointLightUniform + ".constant",
+						    pointLightUniform + ".linear",
+						    pointLightUniform + ".exponent",
+						    *this);
 	}
 }
 
-void Shader::SetSpotLights(const std::vector<SpotLight>& lights)
+void Shader::SetSpotLights(const std::vector<std::shared_ptr<SpotLight>>& lights)
 {
 	size_t lightCount = lights.size();
 	if (lightCount > MAX_SPOTLIGHTS)
@@ -110,20 +129,22 @@ void Shader::SetSpotLights(const std::vector<SpotLight>& lights)
 	{
 		spotLightUniform = "u_SpotLights[" + std::to_string(i) + "]";
 
-		lights[i].UseLight(spotLightUniform + ".base.base.color",
-						   spotLightUniform + ".base.base.ambientIntensity",
-						   spotLightUniform + ".base.base.diffuseIntensity",
-						   spotLightUniform + ".base.position",
-						   spotLightUniform + ".direction",
-						   spotLightUniform + ".base.constant",
-						   spotLightUniform + ".base.linear",
-						   spotLightUniform + ".base.exponent",
-						   spotLightUniform + ".edge",
-						   *this);
+		lights[i]->UseLight(spotLightUniform + ".base.base.color",
+						    spotLightUniform + ".base.base.ambientIntensity",
+						    spotLightUniform + ".base.base.diffuseIntensity",
+						    spotLightUniform + ".base.position",
+						    spotLightUniform + ".direction",
+						    spotLightUniform + ".base.constant",
+						    spotLightUniform + ".base.linear",
+						    spotLightUniform + ".base.exponent",
+						    spotLightUniform + ".edge",
+						    *this);
 	}
 }
 
-void Shader::CreateProgram(const std::string& vertexSource, const std::string& fragmentSource)
+void Shader::CreateProgram(const std::string& vertexSource, 
+						   const std::string& geometrySource,
+						   const std::string& fragmentSource)
 {
 	m_Program = glCreateProgram();
 	if (!m_Program)
@@ -132,13 +153,24 @@ void Shader::CreateProgram(const std::string& vertexSource, const std::string& f
 		return;
 	}
 
-	auto vShader = CreateShader(vertexSource, GL_VERTEX_SHADER);
-	auto fShader = CreateShader(fragmentSource, GL_FRAGMENT_SHADER);
-
+	GLuint vShader = 0, fShader = 0, gShader = 0;
+	vShader = CreateShader(vertexSource, GL_VERTEX_SHADER);
 	if (vShader != 0)
 		glAttachShader(m_Program, vShader);
-	if (fShader != 0)
-		glAttachShader(m_Program, fShader);
+
+	if (!geometrySource.empty())
+	{
+		gShader = CreateShader(geometrySource, GL_GEOMETRY_SHADER);
+		if (gShader != 0)
+			glAttachShader(m_Program, gShader);
+	}
+
+	if (!fragmentSource.empty())
+	{
+		fShader = CreateShader(fragmentSource, GL_FRAGMENT_SHADER);
+		if (fShader != 0)
+			glAttachShader(m_Program, fShader);
+	}
 
 	glLinkProgram(m_Program);
 	
@@ -162,7 +194,10 @@ void Shader::CreateProgram(const std::string& vertexSource, const std::string& f
 	}
 
 	glDeleteShader(vShader);
-	glDeleteShader(fShader);
+	if (gShader)
+		glDeleteShader(gShader);
+	if (fShader)
+		glDeleteShader(fShader);
 }
 
 GLuint Shader::CreateShader(const std::string& source, GLenum type)

@@ -54,6 +54,7 @@ void Window::Initialize()
 
 	glfwSetWindowUserPointer(m_Window, this);
 	glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSwapInterval(1); // enable vsync
 
 	// Initialize input callbacks
 	glfwSetKeyCallback(m_Window, HandleKeyCallback);
