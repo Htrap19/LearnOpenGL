@@ -43,7 +43,7 @@ void Model::Render()
 	{
 		uint32_t textureIndex = m_MeshToTex[i];
 		if (textureIndex < m_Textures.size() && m_Textures[textureIndex])
-			m_Textures[textureIndex]->UseTexture();
+			m_Textures[textureIndex]->UseTexture(1);
 		m_Meshes[i]->Render();
 	}
 }

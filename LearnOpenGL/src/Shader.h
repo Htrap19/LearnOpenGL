@@ -32,6 +32,7 @@ public:
 						const std::string& geometryFile,
 						const std::string& fragmentFile);
 	void Cleanup();
+	void Validate();
 	void Use();
 
 	void SetUniformI(const std::string& name, int value);
@@ -42,8 +43,8 @@ public:
 	void SetUniformMat4v(const std::string& name, const std::vector<glm::mat4>& values);
 
 	void SetDirectionalLight(const DirectionalLight& light);
-	void SetPointLights(const std::vector<std::shared_ptr<PointLight>>& lights);
-	void SetSpotLights(const std::vector<std::shared_ptr<SpotLight>>& lights);
+	void SetPointLights(const std::vector<std::shared_ptr<PointLight>>& lights, uint32_t textureUnit, uint32_t offset);
+	void SetSpotLights(const std::vector<std::shared_ptr<SpotLight>>& lights, uint32_t textureUnit, uint32_t offset);
 
 private:
 	void CreateProgram(const std::string& vertexSource,

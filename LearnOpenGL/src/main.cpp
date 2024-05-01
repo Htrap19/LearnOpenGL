@@ -133,7 +133,7 @@ void RenderScene(Shader& shader)
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f));
 	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 	shader.SetUniformMat4("u_Model", model);
-	redBrickTexture.UseTexture();
+	redBrickTexture.UseTexture(1);
 	shinyMaterial.UseMaterial("u_Material.specularIntensity",
 							  "u_Material.shininess",
 							  shader);
@@ -143,7 +143,7 @@ void RenderScene(Shader& shader)
 	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.0f, -2.5f));
 	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 	shader.SetUniformMat4("u_Model", model);
-	dirtTexture.UseTexture();
+	dirtTexture.UseTexture(1);
 	dullMaterial.UseMaterial("u_Material.specularIntensity",
 							 "u_Material.shininess",
 							 shader);
@@ -153,13 +153,13 @@ void RenderScene(Shader& shader)
 	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f));
 	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
 	shader.SetUniformMat4("u_Model", model);
-	dirtTexture.UseTexture();
-	shinyMaterial.UseMaterial("u_Material.specularIntensity",
+	dirtTexture.UseTexture(1);
+	dullMaterial.UseMaterial("u_Material.specularIntensity",
 							  "u_Material.shininess",
 							  shader);
 	s_MeshList[2]->Render();
 
-	model = glm::translate(glm::mat4(1.0f), glm::vec3(-4.0f, 0.0f, -4.0f));
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(7.0f, -1.4f, 0.0f));
 	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.4f));
 	shader.SetUniformMat4("u_Model", model);
@@ -226,17 +226,20 @@ void RenderPass(Window& window,
 	shader.SetUniformMat4("u_Projection", projection);
 	shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
 	shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
-	mainLight.GetShadowMap()->Use(1);
-	shader.SetUniformI("u_ShadowMap", 1);
+	mainLight.GetShadowMap()->Use(2);
+	shader.SetUniformI("u_ShadowMap", 2);
 	shader.SetUniformMat4("u_DirectionalLightTransform", mainLight.CalcLightTransform());
 
 	glm::vec3 lowerLight = camera.GetPosition();
 	lowerLight.y -= 0.3f;
-	//spotLights[1].SetFlash(lowerLight, camera.GetFront());
+	//spotLights[0]->SetFlash(lowerLight, camera.GetFront());
 
 	shader.SetDirectionalLight(mainLight);
-	shader.SetPointLights(pointLights);
-	shader.SetSpotLights(spotLights);
+	shader.SetPointLights(pointLights, 3, 0);
+	shader.SetSpotLights(spotLights, 3 + pointLights.size(), pointLights.size());
+	
+	shader.SetUniformI("u_Texture", 1);
+	shader.Validate();
 
 	RenderScene(shader);
 
@@ -259,37 +262,37 @@ int main(int argc, char* argv[])
 
 	DirectionalLight mainLight(4096, 4096,
 							   glm::vec3{ 1.0f, 1.0f, 1.0f }, 
-							   0.1f, 0.6f,
-							   glm::vec3{ 0.0f, -7.0f, 2.0f });
+							   0.0f, 0.0f,
+							   glm::vec3{ 0.0f, -15.0f, -10.0f });
 
 	std::vector<std::shared_ptr<PointLight>> pointLights;
 	auto pointLight1 = std::make_shared<PointLight>(1024, 1024, 0.01f, 100.0f,
 													glm::vec3{ 0.0f, 0.0f, 1.0f },
-													0.1f, 1.0f,
-													glm::vec3{ 4.0f, 0.0f, 0.0f },
-													0.3f, 0.2f, 0.1f);
+													0.1f, 0.4f,
+													glm::vec3{ 2.0f, 2.0f, 0.0f },
+													1.0f, 0.07f, 0.017f);
 	pointLights.push_back(pointLight1);
 	auto pointLight2 = std::make_shared<PointLight>(1024, 1024, 0.01f, 100.0f,
 													glm::vec3{ 0.0f, 1.0f, 0.0f },
-													0.1f, 1.0f,
+													0.1f, 0.4f,
 													glm::vec3{ -4.0f, 2.0f, 0.0f },
-													0.3f, 0.2f, 0.1f);
+													1.0f, 0.07f, 0.017f);
 	pointLights.push_back(pointLight2);
 
 	std::vector<std::shared_ptr<SpotLight>> spotLights;
 	spotLights.emplace_back(std::make_shared<SpotLight>(1024, 1024, 0.01f, 100.0f,
 														glm::vec3{ 1.0f, 1.0f, 1.0f },
-														0.1f, 1.0f,
+														0.0f, 2.0f,
 														glm::vec3{ 8.0f, 4.0f, 0.0f },
 														glm::vec3{ 0.0f, -1.0f, 0.0f },
-														0.3f, 0.2f, 0.1f,
+														1.0f, 0.022f, 0.0019f,
 														20.0f));
 	spotLights.emplace_back(std::make_shared<SpotLight>(1024, 1024, 0.01f, 100.0f,
 														glm::vec3{ 1.0f, 1.0f, 1.0f },
 														0.1f, 1.0f,
 														glm::vec3{ 0.0f, 0.0f, 0.0f },
 														glm::vec3{ 0.0f, -1.0f, 0.0f },
-														0.3f, 0.2f, 0.1f,
+														1.0f, 0.022f, 0.0019f,
 														20.0f));
 	
 	uh60.Load("resources/models/uh60.obj");

@@ -48,6 +48,21 @@ void Shader::Cleanup()
 	glDeleteProgram(m_Program);
 }
 
+void Shader::Validate()
+{
+	GLint result = 0;
+	GLchar eLog[1024] = { 0 };
+
+	glValidateProgram(m_Program);
+	glGetProgramiv(m_Program, GL_VALIDATE_STATUS, &result);
+	if (!result)
+	{
+		glGetProgramInfoLog(m_Program, sizeof(eLog), nullptr, eLog);
+		std::cerr << "Error validating program: " << eLog << std::endl;
+		return;
+	}
+}
+
 void Shader::Use()
 {
 	glUseProgram(m_Program);
@@ -92,53 +107,63 @@ void Shader::SetDirectionalLight(const DirectionalLight& light)
 				   *this);
 }
 
-void Shader::SetPointLights(const std::vector<std::shared_ptr<PointLight>>& lights)
+void Shader::SetPointLights(const std::vector<std::shared_ptr<PointLight>>& lights, uint32_t textureUnit, uint32_t offset)
 {
 	size_t lightCount = lights.size();
 	if (lightCount > MAX_POINTLIGHTS)
 		lightCount = MAX_POINTLIGHTS;
 
 	SetUniformI("u_PointLightCount", lightCount);
-	std::string pointLightUniform;
-	pointLightUniform.resize(100);
+	std::string uniformName;
+	uniformName.resize(100);
 	for (size_t i = 0; i < lightCount; i++)
 	{
-		pointLightUniform = "u_PointLights[" + std::to_string(i) + "]";
+		uniformName = "u_PointLights[" + std::to_string(i) + "]";
 
-		lights[i]->UseLight(pointLightUniform + ".base.color",
-						    pointLightUniform + ".base.ambientIntensity",
-						    pointLightUniform + ".base.diffuseIntensity",
-						    pointLightUniform + ".position",
-						    pointLightUniform + ".constant",
-						    pointLightUniform + ".linear",
-						    pointLightUniform + ".exponent",
+		lights[i]->UseLight(uniformName + ".base.color",
+							uniformName + ".base.ambientIntensity",
+							uniformName + ".base.diffuseIntensity",
+							uniformName + ".position",
+							uniformName + ".constant",
+							uniformName + ".linear",
+							uniformName + ".exponent",
 						    *this);
+
+		lights[i]->GetShadowMap()->Use(textureUnit + i);
+		uniformName = "u_OmniShadowMaps[" + std::to_string(offset + i) + "]";
+		SetUniformI(uniformName + ".shadowMap", (textureUnit + i));
+		SetUniformF(uniformName + ".farPlane", lights[i]->GetFarPlane());
 	}
 }
 
-void Shader::SetSpotLights(const std::vector<std::shared_ptr<SpotLight>>& lights)
+void Shader::SetSpotLights(const std::vector<std::shared_ptr<SpotLight>>& lights, uint32_t textureUnit, uint32_t offset)
 {
 	size_t lightCount = lights.size();
 	if (lightCount > MAX_SPOTLIGHTS)
 		lightCount = MAX_SPOTLIGHTS;
 
 	SetUniformI("u_SpotLightCount", lightCount);
-	std::string spotLightUniform;
-	spotLightUniform.resize(100);
+	std::string uniformName;
+	uniformName.resize(100);
 	for (size_t i = 0; i < lightCount; i++)
 	{
-		spotLightUniform = "u_SpotLights[" + std::to_string(i) + "]";
+		uniformName = "u_SpotLights[" + std::to_string(i) + "]";
 
-		lights[i]->UseLight(spotLightUniform + ".base.base.color",
-						    spotLightUniform + ".base.base.ambientIntensity",
-						    spotLightUniform + ".base.base.diffuseIntensity",
-						    spotLightUniform + ".base.position",
-						    spotLightUniform + ".direction",
-						    spotLightUniform + ".base.constant",
-						    spotLightUniform + ".base.linear",
-						    spotLightUniform + ".base.exponent",
-						    spotLightUniform + ".edge",
+		lights[i]->UseLight(uniformName + ".base.base.color",
+							uniformName + ".base.base.ambientIntensity",
+							uniformName + ".base.base.diffuseIntensity",
+							uniformName + ".base.position",
+							uniformName + ".direction",
+							uniformName + ".base.constant",
+							uniformName + ".base.linear",
+							uniformName + ".base.exponent",
+							uniformName + ".edge",
 						    *this);
+
+		lights[i]->GetShadowMap()->Use(textureUnit + i);
+		uniformName = "u_OmniShadowMaps[" + std::to_string(offset + i) + "]";
+		SetUniformI(uniformName + ".shadowMap", (textureUnit + i));
+		SetUniformF(uniformName + ".farPlane", lights[i]->GetFarPlane());
 	}
 }
 
@@ -181,15 +206,6 @@ void Shader::CreateProgram(const std::string& vertexSource,
 	{
 		glGetProgramInfoLog(m_Program, sizeof(eLog), nullptr, eLog);
 		std::cerr << "Error linking program: " << eLog << std::endl;
-		return;
-	}
-
-	glValidateProgram(m_Program);
-	glGetProgramiv(m_Program, GL_VALIDATE_STATUS, &result);
-	if (!result)
-	{
-		glGetProgramInfoLog(m_Program, sizeof(eLog), nullptr, eLog);
-		std::cerr << "Error validating program: " << eLog << std::endl;
 		return;
 	}
 
