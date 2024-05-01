@@ -18,11 +18,14 @@
 #include "SpotLight.h"
 #include "Material.h"
 #include "Model.h"
+#include "Skybox.h"
 
 std::vector<std::shared_ptr<Mesh>> s_MeshList;
 std::vector<Shader> s_ShaderList;
 Shader directionShadowMapShader;
 Shader omniShaderMapShader;
+
+std::shared_ptr<Skybox> skybox;
 
 Texture redBrickTexture;
 Texture dirtTexture;
@@ -85,19 +88,19 @@ static void CreateObjects()
 
 	auto firstPyramid = std::make_shared<Mesh>();
 	firstPyramid->Create(std::vector<GLfloat>(vertices, vertices + numOfVertices), 
-						std::vector<GLuint>(indices, indices + numOfIndices));
+						 std::vector<GLuint>(indices, indices + numOfIndices));
 	s_MeshList.push_back(firstPyramid);
 
 	auto secondPyramid = std::make_shared<Mesh>();
 	secondPyramid->Create(std::vector<GLfloat>(vertices, vertices + numOfVertices),
-						 std::vector<GLuint>(indices, indices + numOfIndices));
+						  std::vector<GLuint>(indices, indices + numOfIndices));
 	s_MeshList.push_back(secondPyramid);
 
 	GLfloat floorVertices[] = {
-		-50.0f, 0.0f, -50.0f,		 0.0f,  0.0f,	0.0f, -1.0f, 0.0f,
-		 50.0f, 0.0f, -50.0f,		50.0f,  0.0f,	0.0f, -1.0f, 0.0f,
-		-50.0f, 0.0f,  50.0f,		 0.0f, 50.0f,	0.0f, -1.0f, 0.0f,
-		 50.0f, 0.0f,  50.0f,		50.0f, 50.0f,	0.0f, -1.0f, 0.0f
+		-20.0f, 0.0f, -20.0f,		 0.0f,  0.0f,	0.0f, -1.0f, 0.0f,
+		 20.0f, 0.0f, -20.0f,		50.0f,  0.0f,	0.0f, -1.0f, 0.0f,
+		-20.0f, 0.0f,  20.0f,		 0.0f, 50.0f,	0.0f, -1.0f, 0.0f,
+		 20.0f, 0.0f,  20.0f,		50.0f, 50.0f,	0.0f, -1.0f, 0.0f
 	};
 	GLsizei numOfFloorVertices = sizeof(floorVertices) / sizeof(floorVertices[0]);
 
@@ -109,7 +112,7 @@ static void CreateObjects()
 
 	auto floor = std::make_shared<Mesh>();
 	floor->Create(std::vector<GLfloat>(floorVertices, floorVertices + numOfFloorVertices),
-				 std::vector<GLuint>(floorIndices, floorIndices + numOfFloorIndices));
+				  std::vector<GLuint>(floorIndices, floorIndices + numOfFloorIndices));
 	s_MeshList.push_back(floor);
 }
 
@@ -217,14 +220,18 @@ void RenderPass(Window& window,
 				Camera& camera,
 				const glm::mat4& projection)
 {
-	auto& shader = s_ShaderList[0];
-	shader.Use();
+	glm::mat4 view = camera.CalculateViewMatrix();
 	window.SetDefaultViewport();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	skybox->Draw(view, projection);
+
+	auto& shader = s_ShaderList[0];
+	shader.Use();
+
 	shader.SetUniformMat4("u_Projection", projection);
-	shader.SetUniformMat4("u_View", camera.CalculateViewMatrix());
+	shader.SetUniformMat4("u_View", view);
 	shader.SetUniformVec3("u_EyePosition", camera.GetPosition());
 	mainLight.GetShadowMap()->Use(2);
 	shader.SetUniformI("u_ShadowMap", 2);
@@ -260,10 +267,20 @@ int main(int argc, char* argv[])
 	dirtTexture.LoadFromFile("resources/textures/dirt.png");
 	plainTexture.LoadFromFile("resources/textures/plain.png");
 
-	DirectionalLight mainLight(4096, 4096,
-							   glm::vec3{ 1.0f, 1.0f, 1.0f }, 
-							   0.0f, 0.0f,
-							   glm::vec3{ 0.0f, -15.0f, -10.0f });
+	skybox = std::make_shared<Skybox>(std::array<std::string, 6>
+	{
+		"resources/textures/skybox/arid2_lf.jpg",
+		"resources/textures/skybox/arid2_rt.jpg",
+		"resources/textures/skybox/arid2_up.jpg",
+		"resources/textures/skybox/arid2_dn.jpg",
+		"resources/textures/skybox/arid2_ft.jpg",
+		"resources/textures/skybox/arid2_bk.jpg",
+	});
+
+	DirectionalLight mainLight(1024, 1024,
+							   glm::vec3{ 0.98f, 0.98f, 0.84f }, 
+							   0.1f, 0.9f,
+							   glm::vec3{ 15.0f, -8.5f, -8.5f });
 
 	std::vector<std::shared_ptr<PointLight>> pointLights;
 	auto pointLight1 = std::make_shared<PointLight>(1024, 1024, 0.01f, 100.0f,
@@ -280,7 +297,7 @@ int main(int argc, char* argv[])
 	pointLights.push_back(pointLight2);
 
 	std::vector<std::shared_ptr<SpotLight>> spotLights;
-	spotLights.emplace_back(std::make_shared<SpotLight>(1024, 1024, 0.01f, 100.0f,
+	/*spotLights.emplace_back(std::make_shared<SpotLight>(1024, 1024, 0.01f, 100.0f,
 														glm::vec3{ 1.0f, 1.0f, 1.0f },
 														0.0f, 2.0f,
 														glm::vec3{ 8.0f, 4.0f, 0.0f },
@@ -293,7 +310,7 @@ int main(int argc, char* argv[])
 														glm::vec3{ 0.0f, 0.0f, 0.0f },
 														glm::vec3{ 0.0f, -1.0f, 0.0f },
 														1.0f, 0.022f, 0.0019f,
-														20.0f));
+														20.0f));*/
 	
 	uh60.Load("resources/models/uh60.obj");
 

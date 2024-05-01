@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\vendor\STB\stb_image.cpp" />
+    <ClCompile Include="src\Skybox.cpp" />
     <ClCompile Include="src\OmniShadowMap.cpp" />
     <ClCompile Include="src\ShadowMap.cpp" />
     <ClCompile Include="src\Model.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Skybox.h" />
     <ClInclude Include="src\OmniShadowMap.h" />
     <ClInclude Include="src\ShadowMap.h" />
     <ClInclude Include="src\Model.h" />
@@ -179,6 +181,8 @@
     <None Include="resources\shaders\omni_shadow_map.vert.glsl" />
     <None Include="resources\shaders\shader.frag.glsl" />
     <None Include="resources\shaders\shader.vert.glsl" />
+    <None Include="resources\shaders\skybox.frag.glsl" />
+    <None Include="resources\shaders\skybox.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
